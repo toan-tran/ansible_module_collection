@@ -23,6 +23,11 @@ Put this python file in `library` folder under the playbook folder, it can be ca
  - This module requires httplib2 Python library installed on remote host.
 
 
+## Compatibility
+
+Compatible Python2, Python3.
+
+
 ## Notes:
 
  - In case of `get` `action`, if `name` is not in Cloudera Manager configuration list, the module simply returns empty value (Null). It will not be considered as error.
