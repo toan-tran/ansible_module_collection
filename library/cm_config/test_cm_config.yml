@@ -1,0 +1,138 @@
+---
+
+- hosts: localhost
+  vars:
+    cm_url: http://192.168.110.200:7180
+    cm_username: admin
+    cm_password: tadmin
+  tasks:
+    - name: Get config key Null with summary view - should return all modified configs
+      cm_config:
+        cm_username: "{{ cm_username }}"
+        cm_password: "{{ cm_password }}"
+        cm_url: "{{ cm_url }}"
+        action: get
+      register: cm_config
+
+    - name: Show CM config of Null config key with summary view
+      debug: var=cm_config
+
+    - name: Get all config key with full view
+      cm_config:
+        cm_username: "{{ cm_username }}"
+        cm_password: "{{ cm_password }}"
+        cm_url: "{{ cm_url }}"
+        action: get
+        view: full
+      register: cm_config
+
+    - name: Show all CM config
+      debug: msg="There are {{ cm_config['content']['items'] | length}} configuration items in Cloudera Manager"
+
+    - name: Get CLUSTER_STATS_START and CLUSTER_STATS_SCHEDULE configuration with summary view
+      cm_config:
+        cm_username: "{{ cm_username }}"
+        cm_password: "{{ cm_password }}"
+        cm_url: "{{ cm_url }}"
+        action: get
+        name: "CLUSTER_STATS_START,CLUSTER_STATS_SCHEDULE"
+      register: cm_config_stat
+
+    - name: Show CLUSTER_STATS_START and CLUSTER_STATS_SCHEDULE configuration with summary view
+      debug: var=cm_config_stat
+
+    - name: Get CLUSTER_STATS_START and CLUSTER_STATS_SCHEDULE configuration with full view
+      cm_config:
+        cm_username: "{{ cm_username }}"
+        cm_password: "{{ cm_password }}"
+        cm_url: "{{ cm_url }}"
+        action: get
+        name: "CLUSTER_STATS_START,CLUSTER_STATS_SCHEDULE"
+        view: full
+      register: cm_config_stat_view_full
+
+    - name: Show CLUSTER_STATS_START and CLUSTER_STATS_SCHEDULE configuration with full view
+      debug: var=cm_config_stat_view_full
+
+    - name: Set CLUSTER_STATS_SCHEDULE to MONTHLY
+      cm_config:
+        cm_username: "{{ cm_username }}"
+        cm_password: "{{ cm_password }}"
+        cm_url: "{{ cm_url }}"
+        action: set
+        name: "CLUSTER_STATS_SCHEDULE"
+        value: "MONTHLY"
+      register: cm_config_cluster_stats_schedule
+
+    - name: Set PARCEL_DISTRIBUTE_RATE_LIMIT_KBS_PER_SECOND to 102400
+      cm_config:
+        cm_username: "{{ cm_username }}"
+        cm_password: "{{ cm_password }}"
+        cm_url: "{{ cm_url }}"
+        action: set
+        name: "PARCEL_DISTRIBUTE_RATE_LIMIT_KBS_PER_SECOND"
+        value: "102400"
+
+    - name: Get config key Null with summary view after setting configs
+      cm_config:
+        cm_username: "{{ cm_username }}"
+        cm_password: "{{ cm_password }}"
+        cm_url: "{{ cm_url }}"
+        action: get
+      register: cm_config
+
+    - name: Show CM config of Null config key with summary view - should include CLUSTER_STATS_SCHEDULE and PARCEL_DISTRIBUTE_RATE_LIMIT_KBS_PER_SECOND
+      debug: var=cm_config
+
+    - name: Delete CLUSTER_STATS_SCHEDULE and PARCEL_DISTRIBUTE_RATE_LIMIT_KBS_PER_SECOND
+      cm_config:
+        cm_username: "{{ cm_username }}"
+        cm_password: "{{ cm_password }}"
+        cm_url: "{{ cm_url }}"
+        action: delete
+        name: "CLUSTER_STATS_SCHEDULE,PARCEL_DISTRIBUTE_RATE_LIMIT_KBS_PER_SECOND"
+        value: "no matter"
+      register: cm_config_delete_cluster_stats_schedule
+
+    - name: Show result of Setting CLUSTER_STATS_SCHEDULE
+      debug: var=cm_config_delete_cluster_stats_schedule
+      tags: set-stat-schedule
+
+    - name: Get CLUSTER_STATS_SCHEDULE and PARCEL_DISTRIBUTE_RATE_LIMIT_KBS_PER_SECOND configuration after deleting
+      cm_config:
+        cm_username: "{{ cm_username }}"
+        cm_password: "{{ cm_password }}"
+        cm_url: "{{ cm_url }}"
+        action: get
+        name: CLUSTER_STATS_SCHEDULE,PARCEL_DISTRIBUTE_RATE_LIMIT_KBS_PER_SECOND
+        view: full
+      register: cm_config_cluster_stat_schedule
+
+    - name: Show CM config of CLUSTER_STATS_SCHEDULE and PARCEL_DISTRIBUTE_RATE_LIMIT_KBS_PER_SECOND - should contain default value
+      debug: var=cm_config_cluster_stat_schedule
+
+    - name: Set inexisting key NON_EXSITING_CONFIG
+      cm_config:
+        cm_username: "{{ cm_username }}"
+        cm_password: "{{ cm_password }}"
+        cm_url: "{{ cm_url }}"
+        action: set
+        name: "NON_EXISTING_CONFIG"
+        value: "some_value"
+      register: cm_config_invalid
+      failed_when: False
+
+    - name: Show result of an invalid config
+      debug: var=cm_config_invalid
+
+    - name: Use wrong credentials
+      cm_config:
+        cm_username: "{{ cm_username }}"
+        cm_password: wrong
+        cm_url: "{{ cm_url }}"
+        action: get
+      register: cm_config_wrong_cred
+      failed_when: False
+
+    - name: Show result of an non-authorized call
+      debug: var=cm_config_wrong_cred
